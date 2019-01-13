@@ -34,7 +34,7 @@ var (
 
 //ethereum address : ECDSA(secp256k1)=>(priv, pub), last 20byte from Keccak256(pub)
 //Keccak256 ealry sha-3
-//ouraddress : ECDSA(secp256k1)=>(priv, pub), Compressed publickey
+//our address : ECDSA(secp256k1)=>(priv, pub), Compressed publickey
 func CreateAddress() (*ecdsa.PrivateKey, common.Address) {
 	priv := CreatePrivatekey()
 	return priv, CreateAddressFromPrivatekey(priv)
@@ -57,31 +57,16 @@ func Ecrecover(hash, sig []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	//TODO:
-	//bytes := (*btcec.PublicKey)(pub).SerializeUncompressed()
 	bytes := (*btcec.PublicKey)(pub).SerializeCompressed()
 	return bytes, err
 }
 
-// SigToPub returns the public key that created the given signature.
 func SigToPub(hash, sig []byte) (*ecdsa.PublicKey, error) {
-	// Convert to btcec input format with 'recovery id' v at the beginning.
-	btcsig := make([]byte, 65)
-	btcsig[0] = sig[64] + 27
-	copy(btcsig[1:], sig)
-
-	pub, _, err := btcec.RecoverCompact(btcec.S256(), btcsig, hash)
+	pub, _, err := btcec.RecoverCompact(btcec.S256(), sig, hash)
 	return (*ecdsa.PublicKey)(pub), err
 }
 
-// Sign calculates an ECDSA signature.
-//
-// This function is susceptible to chosen plaintext attacks that can leak
-// information about the private key that is used for signing. Callers must
-// be aware that the given hash cannot be chosen by an adversery. Common
-// solution is to hash any input before calculating the signature.
-//
-// The produced signature is in the [R || S || V] format where V is 0 or 1.
+
 func Sign(hash []byte, prv *ecdsa.PrivateKey) ([]byte, error) {
 	if len(hash) != 32 {
 		return nil, fmt.Errorf("hash is required to be exactly 32 bytes (%d)", len(hash))
@@ -93,12 +78,9 @@ func Sign(hash []byte, prv *ecdsa.PrivateKey) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Convert to Ethereum signature format with 'recovery id' v at the end.
-	v := sig[0] - 27
-	copy(sig, sig[1:])
-	sig[64] = v
 	return sig, nil
 }
+
 
 // VerifySignature checks that the given public key created signature over hash.
 // The public key should be in compressed (33 bytes) or uncompressed (65 bytes) format.
