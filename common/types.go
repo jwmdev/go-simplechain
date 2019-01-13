@@ -10,7 +10,7 @@ import (
 //first naive publickey
 const (
 	HashLength    = 32
-	AddressLength = 33
+	AddressLength = 37 //33
 	SigLength     = 65
 )
 
