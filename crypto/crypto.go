@@ -24,12 +24,32 @@ import (
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/najimmy/go-simplechain/common"
 )
 
 var (
 	secp256k1N, _  = new(big.Int).SetString("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16)
 	secp256k1halfN = new(big.Int).Div(secp256k1N, big.NewInt(2))
 )
+
+//ethereum address : ECDSA(secp256k1)=>(priv, pub), last 20byte from Keccak256(pub)
+//Keccak256 ealry sha-3
+//ouraddress : ECDSA(secp256k1)=>(priv, pub), Compressed publickey
+func CreateAddress() (*ecdsa.PrivateKey, common.Address) {
+	priv := CreatePrivatekey()
+	return priv, CreateAddressFromPrivatekey(priv)
+}
+
+func CreatePrivatekey() *ecdsa.PrivateKey {
+	priv, _ := btcec.NewPrivateKey(btcec.S256())
+	return (*ecdsa.PrivateKey)(priv)
+}
+
+func CreateAddressFromPrivatekey(priv *ecdsa.PrivateKey) common.Address {
+	priv2 := (*btcec.PrivateKey)(priv)
+	address := common.BytesToAddress(priv2.PubKey().SerializeCompressed())
+	return address
+}
 
 // Ecrecover returns the uncompressed public key that created the given signature.
 func Ecrecover(hash, sig []byte) ([]byte, error) {

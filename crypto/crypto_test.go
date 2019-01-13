@@ -1,18 +1,18 @@
-package crypto_test
+package crypto
 
 import (
 	"encoding/hex"
 	"testing"
 
 	"github.com/najimmy/go-simplechain/common"
-	"github.com/najimmy/go-simplechain/crypto"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHash(t *testing.T) {
-	assert.Equal(t, hex.EncodeToString(crypto.Sha3b256([]byte("dummy test"))), "6151d993d53d37941297e3f3e31a26a7cdc1d5fb3efc4a5a25132cdd38e05b15", "test sha3-256")
+	assert.Equal(t, hex.EncodeToString(Sha3b256([]byte("dummy test"))), "6151d993d53d37941297e3f3e31a26a7cdc1d5fb3efc4a5a25132cdd38e05b15", "test sha3-256")
 }
 
 func TestAddress(t *testing.T) {
@@ -32,4 +32,20 @@ func TestAddress(t *testing.T) {
 	// fmt.Println(common.ToHex(pubkey.SerializeCompressed()))
 	//fmt.Println(common.ToHex(pubkey.SerializeUncompressed()))
 	assert.Equal(t, pubkey.SerializeCompressed(), address[:], "")
+}
+
+func TestCreateAndEcrecover(t *testing.T) {
+	priv, address := CreateAddress()
+	assert.Equal(t, CreateAddressFromPrivatekey(priv), address, "")
+
+	hash := make([]byte, 32)
+	hasher := sha3.New256()
+	k := []byte("data...")
+	hasher.Write(k)
+	hasher.Sum(hash)
+
+	signed, _ := Sign(hash, priv)
+	pub, _ := Ecrecover(hash, signed)
+	assert.Equal(t, address, common.BytesToAddress(pub))
+
 }
