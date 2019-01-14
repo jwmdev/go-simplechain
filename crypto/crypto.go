@@ -50,9 +50,7 @@ func CreateAddressFromPrivatekey(priv *ecdsa.PrivateKey) common.Address {
 
 func CreateAddressFromPublickeyByte(pub []byte) common.Address {
 	hash := Sha3b256(pub)
-	fmt.Println(len(hash))
 	hash = append(hash, Sha3b256(hash)[0:4]...)
-	fmt.Println(len(hash))
 	address := common.BytesToAddress(hash)
 	return address
 }
@@ -89,3 +87,5 @@ func Sign(hash []byte, prv *ecdsa.PrivateKey) ([]byte, error) {
 	}
 	return sig, nil
 }
+
+
