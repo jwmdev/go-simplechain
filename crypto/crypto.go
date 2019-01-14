@@ -27,7 +27,7 @@ import (
 
 //ethereum address : ECDSA(secp256k1)=>(priv, pub), last 20byte from Keccak256(pub)
 //Keccak256 ealry sha-3
-//our address : ECDSA(secp256k1)=>(priv, pub), Compressed publickey + checksum sha3-256(Compressed publickey)[0:4]
+//our address : ECDSA(secp256k1)=>(priv, pub), sha3-256(publickey) + checksum sha3-256(sha3-256(publickey))[0:4]
 func CreateAddress() (*ecdsa.PrivateKey, common.Address) {
 	priv := CreatePrivatekey()
 	return priv, CreateAddressFromPrivatekey(priv)
@@ -40,14 +40,25 @@ func CreatePrivatekey() *ecdsa.PrivateKey {
 
 func CreateAddressFromPrivatekey(priv *ecdsa.PrivateKey) common.Address {
 	priv2 := (*btcec.PrivateKey)(priv)
-	pub := priv2.PubKey().SerializeCompressed()
-	pub = append(pub, Sha3b256(pub)[0:4]...)
-	address := common.BytesToAddress(pub)
+	pub := priv2.PubKey().SerializeUncompressed()
+	hash := Sha3b256(pub)
+	hash = append(hash, Sha3b256(hash)[0:4]...)
+	address := common.BytesToAddress(hash)
+	//SerializeUncompressed
+	return address
+}
+
+func CreateAddressFromPublickeyByte(pub []byte) common.Address {
+	hash := Sha3b256(pub)
+	fmt.Println(len(hash))
+	hash = append(hash, Sha3b256(hash)[0:4]...)
+	fmt.Println(len(hash))
+	address := common.BytesToAddress(hash)
 	return address
 }
 
 func ValidateAddress(address common.Address) bool {
-	return reflect.DeepEqual(Sha3b256(address[0:33])[0:4], address[33:37])
+	return reflect.DeepEqual(Sha3b256(address[0:32])[0:4], address[32:36])
 }
 
 // Ecrecover returns the uncompressed public key that created the given signature.
@@ -56,7 +67,7 @@ func Ecrecover(hash, sig []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	bytes := (*btcec.PublicKey)(pub).SerializeCompressed()
+	bytes := (*btcec.PublicKey)(pub).SerializeUncompressed()
 	return bytes, err
 }
 

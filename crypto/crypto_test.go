@@ -51,12 +51,12 @@ func TestCreateAndEcrecover(t *testing.T) {
 	pub, _ := Ecrecover(hash, signed)
 	// fmt.Printf("%v\n", common.BytesToAddress(pub))
 	// fmt.Println(common.Address2Hex(common.BytesToAddress(pub)))
-	assert.Equal(t, address[0:33], pub)
+	assert.Equal(t, address, CreateAddressFromPublickeyByte(pub))
 
 	hasher.Write([]byte("."))
 	hash = hasher.Sum(nil)
 	pub, _ = Ecrecover(hash, signed)
-	assert.NotEqual(t, address[0:33], pub)
+	assert.NotEqual(t, address, CreateAddressFromPublickeyByte(pub))
 }
 
 func TestValidateAddress(t *testing.T) {
